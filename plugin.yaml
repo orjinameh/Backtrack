@@ -1,0 +1,10 @@
+name: backtrack
+version: "0.1.0"
+description: Checkpoints the files Hermes changes before every tool call, so any action can be previewed, undone and redone (/undo, Desktop timeline).
+author: orjinameh
+requires_hermes: ">=0.21.6"
+provides_tools:
+  - backtrack_timeline
+provides_hooks:
+  - pre_tool_call
+  - post_tool_call
