@@ -359,8 +359,11 @@ class Store:
 
     def last_undoable(self) -> Optional[dict]:
         for r in reversed(self._records()):
-            if r["type"] == "action" and r.get("before") and not r.get("reverted_by"):
-                return r
+            if r["type"] != "action" or not r.get("before") or r.get("reverted_by"):
+                continue
+            if r.get("after") and self.tree_of(r["before"]) == self.tree_of(r["after"]):
+                continue  # changed no files (a read-only check, or a failed call): nothing to undo
+            return r
         return None
 
     def preview(self, rec: dict, max_chars: int = 6000) -> dict:

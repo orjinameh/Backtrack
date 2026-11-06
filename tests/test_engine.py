@@ -206,3 +206,18 @@ def test_tool_classifier(name, args, expected):
 def test_classifier_respects_config():
     assert engine.is_mutating_tool("my_custom", {}, extra=["my_custom"])
     assert not engine.is_mutating_tool("write_file", {}, ignore=["write_file"])
+
+
+def test_undo_skips_actions_that_changed_nothing(store, proj):
+    before = digest_tree(proj)
+    r1 = store.begin_action("terminal", "rm README.md")
+    (proj / "README.md").unlink()
+    store.end_action(r1)
+    r2 = store.begin_action("terminal", "cat x && echo y")   # logged, but touches nothing
+    store.end_action(r2)
+    r3 = store.begin_action("write_file", "failed write")
+    store.end_action(r3, "error")
+    assert store.last_undoable()["id"] == r1
+    store.undo_to(store.last_undoable())
+    assert digest_tree(proj) == before
+    assert store.last_undoable() is None
