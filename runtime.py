@@ -133,7 +133,7 @@ class Runtime:
                     f"- reverts actions {pv['reverts']}")
             if not confirm:
                 return (f"{head}\n{self._fmt_changes(pv['changes'])}\n\n{pv['diff']}\n\n"
-                        f"Nothing changed yet. Run `/undo --yes{' ' + nums[0] if nums else ''}` to apply.")
+                        f"Nothing changed yet. Run `/backtrack undo{' ' + nums[0] if nums else ''} --yes` to apply.")
             res = st.undo_to(rec)
             ok = "verified: tree hash matches the checkpoint" if res["verified"] else \
                 f"NOT verified ({res['verify_note']})"
@@ -151,6 +151,8 @@ class Runtime:
             words = (raw_args or "").split()
             sub = words[0] if words else "list"
             st = self.store()
+            if sub in ("undo", "restore"):  # same as /undo; needed if Hermes owns the /undo name
+                return self.cmd_undo(" ".join(words[1:]))
             if sub == "redo":
                 res = st.redo()
                 return (f"Redone: {len(res['written'])} written, {len(res['removed'])} removed - "
@@ -173,7 +175,7 @@ class Runtime:
                     mark = "reverted" if r.get("reverted_by") else (r.get("status") or "")
                     out.append(f"#{r['id']} [{r['tool']}] {r['summary']} - {len(r['files'])} file(s) {mark}".rstrip())
                 return "\n".join(out)
-            return "Usage: /backtrack [list|all|diff <id>|redo]   and   /undo [id] [--yes]"
+            return "Usage: /backtrack [list|all|diff <id>|undo [id] [--yes]|redo]"
         except engine.RestoreRefused as exc:
             return f"Backtrack refused: {exc}"
         except Exception as exc:

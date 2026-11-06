@@ -10,10 +10,11 @@ Hermes's built-in memory-rewind versions Hermes's own memory and skill files. Ba
 ## Use
 
 ```
-/undo                 preview undoing the last action (diff + file list, nothing changes)
-/undo --yes           apply it; the restore is verified by tree hash
-/undo 7 --yes         restore the state before action #7 (reverts #7 and later)
-/backtrack            timeline        /backtrack diff 7        /backtrack redo
+/backtrack undo           preview undoing the last action (diff + file list, nothing changes)
+/backtrack undo --yes     apply it; the restore is verified by tree hash
+/backtrack undo 7 --yes   restore the state before action #7 (reverts #7 and later)
+/backtrack                timeline        /backtrack diff 7        /backtrack redo
+/undo                     alias of `/backtrack undo` (Hermes may reserve the /undo name)
 hermes backtrack list|diff <id>|undo [id] [--yes]|redo
 ```
 

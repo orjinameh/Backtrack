@@ -80,11 +80,12 @@ def test_money_shot_cleanup_then_undo(env):
     run_tool(ctx, "terminal", {"command": "rm -rf src && echo x > notes.md"}, "c1", clean)
     assert digest(root) != before
 
-    preview = ctx.commands["undo"]("")
+    preview = ctx.commands["backtrack"]("undo")
     assert "Nothing changed yet" in preview and "src/app.py" in preview
+    assert "/backtrack undo --yes" in preview
     assert digest(root) != before, "preview must not touch files"
 
-    done = ctx.commands["undo"]("--yes")
+    done = ctx.commands["backtrack"]("undo --yes")
     assert "verified: tree hash matches" in done
     assert digest(root) == before
 
