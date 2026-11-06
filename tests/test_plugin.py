@@ -149,3 +149,18 @@ def test_settings_can_disable_tracking(tmp_path, monkeypatch):
     pkg.register(ctx)
     run_tool(ctx, "write_file", {"path": "f"}, "c1", lambda: (root / "f").write_text("2"))
     assert "no file-changing actions" in ctx.commands["backtrack"]("list")
+
+
+def test_list_says_when_a_workspace_is_too_big_to_checkpoint(tmp_path, monkeypatch):
+    root = tmp_path / "big"
+    root.mkdir()
+    (root / "a.txt").write_text("x" * 100)
+    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("TERMINAL_CWD", str(root))
+    pkg = load_plugin()
+    ctx = FakeCtx({"max_total_mb": 0.00001})
+    pkg.register(ctx)
+    run_tool(ctx, "terminal", {"command": "rm a.txt"}, "c1", lambda: (root / "a.txt").unlink())
+    out = ctx.commands["backtrack"]("all")
+    assert "NOT checkpointed" in out and "exceed" in out
+    assert "not checkpointed" in ctx.commands["backtrack"]("undo").lower()

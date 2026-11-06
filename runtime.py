@@ -122,6 +122,12 @@ class Runtime:
             nums = [w for w in words if w.isdigit()]
             st = self.store()
             rec = st.get(int(nums[0])) if nums else st.last_undoable()
+            if rec is None and not nums:
+                last = next((r for r in reversed(st._records()) if r["type"] == "action"), None)
+                if last and not last.get("before"):
+                    return (f"Backtrack: the last action (#{last['id']}) was NOT checkpointed: "
+                            f"{last.get('skipped') or 'unknown reason'}. Start Hermes inside your project "
+                            f"folder, or set the `workspace` setting, so the tracked folder is small enough.")
             if rec is None or rec.get("type") != "action":
                 return "Backtrack: nothing to undo yet." if not nums else f"Backtrack: no action #{nums[0]}."
             if not rec.get("before"):
@@ -173,7 +179,9 @@ class Runtime:
                 out = [f"Backtrack timeline for {st.root}"]
                 for r in rows:
                     mark = "reverted" if r.get("reverted_by") else (r.get("status") or "")
-                    out.append(f"#{r['id']} [{r['tool']}] {r['summary']} - {len(r['files'])} file(s) {mark}".rstrip())
+                    what = (f"{len(r['files'])} file(s)" if r.get("before") else
+                            f"NOT checkpointed: {r.get('skipped') or 'unknown reason'}")
+                    out.append(f"#{r['id']} [{r['tool']}] {r['summary']} - {what} {mark}".rstrip())
                 return "\n".join(out)
             return "Usage: /backtrack [list|all|diff <id>|undo [id] [--yes]|redo]"
         except engine.RestoreRefused as exc:
